@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon api/index.js",
     "start": "node api/index.js",
-    "build": "npm install && npm install --prefix client && npm run build --prefix client"
+    "build": "npm install && cd client && npm install && npm run build"
   },
   "author": "Tamim Ahmed",
   "license": "ISC",
