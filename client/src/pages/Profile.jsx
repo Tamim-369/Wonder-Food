@@ -13,11 +13,11 @@ const Profile = ({
   const [formData, setFormData] = useState(userData);
   const navigate = useNavigate();
   const [profilePosts, setProfilePosts] = useState([]);
-
+  const [imageClicked, setImageClicked] = useState(false);
   const [imageFile, setImageFile] = useState("");
   const [imageFileUrl, setImageFileUrl] = useState("");
   const [formChanged, setFormChanged] = useState(false); // Track form changes
-  const [loading, setLoading] = useState(true); // Track loading state
+  const [loading, setLoading] = useState(false); // Track loading state
   const getSetPosts = async (email) => {
     try {
       const posts = await getPosts(email);
@@ -87,6 +87,7 @@ const Profile = ({
 
   const updateUser = async () => {
     try {
+      setLoading(true);
       const newUserData = new FormData();
       const image = imageFile ? imageFile : profilePicture;
       newUserData.append("name", formData.name);
@@ -101,15 +102,21 @@ const Profile = ({
       });
 
       if (!response.ok) {
+        setLoading(false);
+
         throw new Error("Failed to update user");
       }
 
       const data = await response.json();
       localStorage.setItem("email", data.email);
       alert("Updated successfully");
+      setLoading(false);
+
       location.reload();
       return data;
     } catch (error) {
+      setLoading(false);
+
       throw new Error("Failed to update user: " + error.message);
     }
   };
@@ -190,7 +197,7 @@ const Profile = ({
             <div className="main flex flex-col justify-center items-center bg-white p-4">
               <div
                 className="img bg-no-repeat bg-cover w-20 h-20 rounded-full bg-center"
-                style={{ backgroundImage: `url(${profilePicture})` }}
+                style={{ backgroundImage: `url(${userData.profilePicture})` }}
               ></div>
               <div className="w-11/12 sm:2-8/12 text-center md:w-6/12">
                 <h1 className="font-semibold text-xl">{userData.name}</h1>
@@ -250,7 +257,7 @@ const Profile = ({
                     setTabSelected({ ...tabSelected, currentTab: 2 })
                   }
                 >
-                  <span>Update Info</span>
+                  <span>Update Info </span>
                 </button>
               </li>
               <li className="flex-1" role="presentation ">
@@ -310,14 +317,11 @@ const Profile = ({
                           <div
                             className="w-full hidden sm:block h-full bg-no-repeat bg-cover bg-center"
                             style={{
-                              backgroundImage: `url(${findPicture(
-                                "postsPicture",
-                                item.postsPicture
-                              )})`,
+                              backgroundImage: `url(${item.postsPicture})`,
                             }}
                           ></div>
                           <img
-                            src={findPicture("postsPicture", item.postsPicture)}
+                            src={item.postsPicture}
                             alt="card image"
                             className="object-cover sm:hidden block min-h-full aspect-auto"
                           />
@@ -458,8 +462,9 @@ const Profile = ({
                     <button
                       className="bg-yellow-400 p-2 w-full rounded-md text-white"
                       type="submit"
+                      disabled={loading}
                     >
-                      Update
+                      Update {loading && "..."}
                     </button>
                   </div>
                   <small>

@@ -129,10 +129,7 @@ const Navbar = ({
                     onClick={() => setIsClicked(!isClicked)}
                     className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-white bg-no-repeat bg-cover bg-center"
                     style={{
-                      backgroundImage: `url(${findPicture(
-                        "profilePicture",
-                        userData.profilePicture
-                      )})`,
+                      backgroundImage: `url(${userData.profilePicture})`,
                     }}
                   >
                     {/* <img

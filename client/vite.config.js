@@ -6,17 +6,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://wonderfood-api.onrender.com",
-        secure: true,
+        target: "http://localhost:3000",
         changeOrigin: true,
-        headers: {
-          host: "wonderfood-api.onrender.com", // Set the host header
-        },
       },
     },
-  },
-  define: {
-    // Set environment variable to bypass SSL certificate verification
-    "process.env.NODE_TLS_REJECT_UNAUTHORIZED": JSON.stringify("0"),
   },
 });

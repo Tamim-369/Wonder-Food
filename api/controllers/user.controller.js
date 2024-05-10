@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url"; // Import fileURLToPath function
 import checkAndDeleteImages from "../utils/autoDelete.js";
+import cloudinary from "../utils/cloudinary.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url)); // Define __dirname
 
 const deleteProfilePicture = (filePath) => {
@@ -45,20 +46,6 @@ export const getUser = async (req, res, next) => {
     }
   }
 };
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../profilePicture")); // Destination folder for profile pictures
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const originalFilename = file.originalname;
-    const fileExtension = originalFilename.split(".").pop(); // Get the original file extension
-    const newFilename = `${file.originalname}-${uniqueSuffix}.${fileExtension}`; // Append unique suffix and original extension
-    cb(null, newFilename); // Use the new filename for profile pictures
-  },
-});
-
-const upload = multer({ storage }).single("profilePicture"); // Assuming 'profilePicture' is the field name in the form
 
 export const updateUser = async (req, res, next) => {
   const userId = req.params.id;
@@ -71,46 +58,35 @@ export const updateUser = async (req, res, next) => {
     }
 
     // Handle file upload using multer middleware
-    upload(req, res, async function (err) {
-      // Handle multer errors
-      if (err instanceof multer.MulterError) {
-        console.error("Multer error:", err);
-        return res.status(500).json({ error: "File upload error" });
-      } else if (err) {
-        console.error("Unknown error:", err);
-        return res.status(500).json({ error: "Unknown error" });
-      }
 
-      // Extract data from request body
-      const { name, bio } = req.body;
-
-      // Check if a file was uploaded
-      let profilePicture = user.profilePicture;
-      if (req.file) {
-        profilePicture = req.file.filename;
-      }
-
-      // If a new profile picture was uploaded and there's an existing profile picture, delete the old one
-      if (req.file && user.profilePicture) {
-        const profilePicturePath = path.join(
-          __dirname,
-          "../profilePicture",
-          user.profilePicture
-        );
-        // Call your function to delete the old profile picture
-        deleteProfilePicture(profilePicturePath);
-      }
-
+    // Extract data from request body
+    const { name, bio } = req.body;
+    if (req.file) {
+      const file = req.file;
+      const img = await cloudinary.uploader.upload(file.path, {
+        folder: "profilePicture",
+      });
+      const profilePicture = img.secure_url;
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { name, bio, profilePicture },
+        { new: true }
+      );
+      res.status(200).json(updatedUser);
+    } else {
+      const profilePicture = user.profilePicture;
       // Update user data including profile picture
       const updatedUser = await User.findByIdAndUpdate(
         userId,
         { name, bio, profilePicture },
         { new: true }
       );
-
-      // Send updated user data
       res.status(200).json(updatedUser);
-    });
+    }
+
+    // Update user data including profile picture
+
+    // Send updated user data
   } catch (error) {
     console.error("Error updating user:", error);
     res

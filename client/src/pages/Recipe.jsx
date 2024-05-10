@@ -155,7 +155,7 @@ const Recipe = ({ getPost, findPicture, getUser, getUserByEmail }) => {
     <div className=" mt-20 ">
       <div className="md:mt-24 pt-10 w-full md:w-10/12 mx-auto pb-10 bg-white ">
         <img
-          src={postsPicture}
+          src={postData.postsPicture}
           className=" w-full px-4 sm:w-10/12 md:w-10/12 md:h-8/12 sm:mx-auto"
           alt=""
         />
@@ -228,10 +228,7 @@ const Recipe = ({ getPost, findPicture, getUser, getUserByEmail }) => {
                   >
                     <div className="img w-2/12 mr-2 h-2/12 rounded-full flex flex-col justify-start items-start self-start">
                       <img
-                        src={`${findPicture(
-                          "profilePicture",
-                          item.commenter.profilePicture
-                        )}`}
+                        src={`${item.commenter.profilePicture}`}
                         className="w-full md:w-10/12 rounded-full "
                         alt=""
                       />

@@ -43,12 +43,10 @@ const UpdatePost = ({ getPost, findPicture }) => {
       // Create FormData object to hold form data
       const formDataToSend = new FormData();
 
-      // Append each form field and its value to the FormData object
       for (const key in formData) {
         formDataToSend.append(key, formData[key]);
       }
 
-      // Append the image file to the FormData object
       if (imageFile) {
         formDataToSend.append("postsPicture", imageFile);
       }

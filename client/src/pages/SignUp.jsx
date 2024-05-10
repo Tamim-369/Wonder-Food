@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -25,6 +26,7 @@ const SignUp = () => {
     event.preventDefault();
 
     try {
+      setLoading(true);
       const data = new FormData();
       data.append("name", formData.name);
       data.append("email", formData.email);
@@ -39,12 +41,14 @@ const SignUp = () => {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error);
+        setLoading(false);
       }
 
       console.log("SignUp successful");
-      
+      setLoading(false);
       window.location.href = `/`;
     } catch (error) {
+      setLoading(false);
       setError(error.message);
       console.error("There was a problem with the post request:", error);
     }
@@ -156,8 +160,9 @@ const SignUp = () => {
             <button
               className="bg-yellow-400 p-2 w-full rounded-md text-white"
               type="submit"
+              disabled={loading}
             >
-              Sign Up
+              Sign Up {loading && "..."}
             </button>
           </div>
           <small>

@@ -6,93 +6,71 @@ import errorHandler from "../utils/error.js";
 import nodemailer from "nodemailer";
 // Multer setup
 import multer from "multer";
+import cloudinary from "../utils/cloudinary.js";
 
-// Set storage engine
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "profilePicture/"); // Destination folder for uploaded images
-  },
-  filename: function (req, file, cb) {
-    cb(
-      null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    ); // Generate unique filename
-  },
-});
 const createToken = (id) =>
   jwt.sign({ userId: id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
-// Initialize multer
-const upload = multer({
-  storage: storage,
-}).single("profilePicture"); // Name of the field in the form
 
 export const signup = async (req, res, next) => {
   try {
     // Call multer middleware to handle file upload
-    upload(req, res, async function (err) {
-      if (err instanceof multer.MulterError) {
-        // A Multer error occurred when uploading.
-        console.error("Multer error:", err);
-        return res.status(500).json({ error: "File upload error" });
-      } else if (err) {
-        // An unknown error occurred when uploading.
-        console.error("Unknown error:", err);
-        return res.status(500).json({ error: "Unknown error" });
-      }
 
-      // Multer has successfully uploaded the file
-      const { name, bio, email, password } = req.body;
-      const profilePicture = req.file ? req.file.filename : null; // Get the filename if file was uploaded
-
-      // Hash the password before saving it to the database
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const newUser = new User({
-        name,
-        bio,
-        profilePicture, // Save the filename to the user object
-        email,
-        password: hashedPassword,
-      });
-      const existingEmail = await User.findOne({ email });
-      const existingName = await User.findOne({ name });
-      if (existingEmail || existingName) {
-        return res.status(400).json({ error: "name or email already exist" });
-      }
-      const num = Math.round(Math.random(1, 100) * 1e6);
-      const sendEmail = (email, id) => {
-        // Replace these options with your email service provider
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: process.env.email,
-            pass: process.env.password,
-          },
-        });
-
-        const mailOptions = {
-          from: process.env.email,
-          to: email,
-          subject: "Verify Email",
-          text: `To verify your email, click on the following link: ${process.env.frontendUrl}/verify?id=${id}`,
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.error("Error sending email:", error);
-          } else {
-            console.log("Email sent:", info.response);
-          }
-        });
-      };
-      await newUser.save();
-      // res.status(201).json({ message: "User verified successfully" });
-      res.status(201).json(newUser);
-      const userinfo = await User.findOne({ email: req.body.email });
-      sendEmail(req.body.email, userinfo._id);
+    // Multer has successfully uploaded the file
+    const { name, bio, email, password } = req.body;
+    const file = req.file;
+    const img = await cloudinary.uploader.upload(file.path, {
+      folder: "profilePicture",
     });
+    const imgUrl = img.secure_url;
+
+    // Hash the password before saving it to the database
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      name,
+      bio,
+      profilePicture: imgUrl,
+      email,
+      password: hashedPassword,
+    });
+    const existingEmail = await User.findOne({ email });
+    const existingName = await User.findOne({ name });
+    if (existingEmail || existingName) {
+      return res.status(400).json({ error: "name or email already exist" });
+    }
+    const num = Math.round(Math.random(1, 100) * 1e6);
+    const sendEmail = (email, id) => {
+      // Replace these options with your email service provider
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.email,
+          pass: process.env.password,
+        },
+      });
+
+      const mailOptions = {
+        from: process.env.email,
+        to: email,
+        subject: "Verify Email",
+        text: `To verify your email, click on the following link: ${process.env.frontendUrl}/verify?id=${id}`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending email:", error);
+        } else {
+          console.log("Email sent:", info.response);
+        }
+      });
+    };
+    await newUser.save();
+    // res.status(201).json({ message: "User verified successfully" });
+    res.status(201).json(newUser);
+    const userinfo = await User.findOne({ email: req.body.email });
+    sendEmail(req.body.email, userinfo._id);
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).json({ error: "Server error" });

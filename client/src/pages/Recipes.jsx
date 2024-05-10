@@ -87,7 +87,7 @@ const Recipes = ({ getPosts, findPicture }) => {
             type="text"
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search"
-            className="border-none w-full p-3 bg-gray-100 shadow-gray-400 shadow-lg border-gray-500 border-[1px] rounded-lg  focus:outline-none "
+            className="border-none w-full p-3 bg-gray-50 border  shadow-lg  rounded-lg  focus:outline-none "
           />
         </div>
       </div>
@@ -100,10 +100,7 @@ const Recipes = ({ getPosts, findPicture }) => {
                 <div
                   className="w-full hidden sm:block min-h-full bg-no-repeat bg-cover bg-center"
                   style={{
-                    backgroundImage: `url(${findPicture(
-                      "postsPicture",
-                      item.postsPicture
-                    )})`,
+                    backgroundImage: `url(${item.postsPicture})`,
                   }}
                 ></div>
                 <img

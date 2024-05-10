@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const CreatePost = () => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -18,6 +19,7 @@ const CreatePost = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
+      setLoading(true);
       const data = new FormData();
       data.append("name", formData.name);
       data.append("description", formData.description);
@@ -34,13 +36,15 @@ const CreatePost = () => {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error);
+        setLoading(false);
       }
       const recipeData = await response.json();
       alert("Post Created Succesfully");
-
+      setLoading(false);
       navigate(`/recipe?id=${recipeData._id}`);
     } catch (error) {
       setError(error.message);
+      setLoading(false);
       console.error("There was a problem with the post request:", error);
     }
   };
@@ -129,8 +133,9 @@ const CreatePost = () => {
             <button
               type="submit"
               className="bg-yellow-500 p-2 rounded-md text-white border-[1px] shadow-lg"
+              disabled={loading}
             >
-              Post Recipe
+              Post Recipe {loading && "..."}
             </button>
           </div>
         </form>

@@ -3,7 +3,7 @@ import Post from "../models/post.model.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url"; // Import fileURLToPath function
-
+import cloudinary from "../utils/cloudinary.js";
 import checkPostsAndDeleteImages from "../utils/autoDeletePostImg.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url)); // Define __dirname
 
@@ -40,34 +40,27 @@ const deletePostPicture = (filePath) => {
 };
 export const createPost = async (req, res) => {
   try {
-    upload(req, res, async function (err) {
-      if (err instanceof multer.MulterError) {
-        // A Multer error occurred when uploading.
-        console.error("Multer error:", err);
-        return res.status(500).json({ error: "File upload error" });
-      } else if (err) {
-        // An unknown error occurred when uploading.
-        console.error("Unknown error:", err);
-        return res.status(500).json({ error: "Unknown error" });
-      }
-      // Multer has successfully uploaded the file
-      const { name, description, instructions, ingredients, userEmail } =
-        req.body;
-      const postsPicture = req.file ? req.file.filename : null; // Get the filename if file was uploaded
-
-      const newPost = new Post({
-        name,
-        description,
-        instructions,
-        ingredients,
-        postsPicture,
-        userEmail,
-      });
-
-      const saved = await newPost.save();
-
-      res.status(201).json(saved);
+    // Multer has successfully uploaded the file
+    const { name, description, instructions, ingredients, userEmail } =
+      req.body;
+    const file = req.file;
+    const img = await cloudinary.uploader.upload(file.path, {
+      folder: "profilePicture",
     });
+    const imgUrl = img.secure_url;
+
+    const newPost = new Post({
+      name,
+      description,
+      instructions,
+      ingredients,
+      postsPicture: imgUrl,
+      userEmail,
+    });
+
+    const saved = await newPost.save();
+
+    res.status(201).json(saved);
   } catch (error) {}
 };
 
@@ -129,47 +122,26 @@ export const getPostAndUpdate = async (req, res, next) => {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    // Handle file upload using multer middleware
-    upload(req, res, async function (err) {
-      // Handle multer errors
-      if (err instanceof multer.MulterError) {
-        console.error("Multer error:", err);
-        return res.status(500).json({ error: "File upload error" });
-      } else if (err) {
-        console.error("Unknown error:", err);
-        return res.status(500).json({ error: "Unknown error" });
-      }
+    const { name, description, ingredients, instructions } = req.body;
 
-      // Extract data from request body
-      const { name, description, ingredients, instructions } = req.body;
+    // Check if a file was uploaded
+    let postsPicture = post.postsPicture;
+    if (req.file) {
+      const file = req.file;
+      const img = await cloudinary.uploader.upload(file.path, {
+        folder: "profilePicture",
+      });
+      postsPicture = img.secure_url;
+    }
 
-      // Check if a file was uploaded
-      let postsPicture = post.postsPicture;
-      if (req.file) {
-        postsPicture = req.file.filename;
-      }
+    const updatedPost = await Post.findByIdAndUpdate(
+      postId,
+      { name, description, ingredients, instructions, postsPicture },
+      { new: true }
+    );
 
-      // If a new profile picture was uploaded and there's an existing profile picture, delete the old one
-      if (req.file && post.postsPicture) {
-        const postPicturePath = path.join(
-          __dirname,
-          "../postsPicture",
-          post.postsPicture
-        );
-        // Call your function to delete the old profile picture
-        deletePostPicture(postPicturePath);
-      }
-
-      // Update user data including profile picture
-      const updatedPost = await Post.findByIdAndUpdate(
-        postId,
-        { name, description, ingredients, instructions, postsPicture },
-        { new: true }
-      );
-
-      // Send updated user data
-      res.status(200).json(updatedPost);
-    });
+    // Send updated user data
+    res.status(200).json(updatedPost);
   } catch (error) {
     console.error("Error updating user:", error);
     res

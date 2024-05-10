@@ -64,7 +64,7 @@ function App() {
       });
       const userData = await user.json();
       setUserData(userData);
-      setProfilePicture(findPicture("profilePicture", userData.profilePicture));
+      setProfilePicture(userData.profilePicture);
       return userData;
     } else {
       const userEmail = localStorage.getItem("email");
