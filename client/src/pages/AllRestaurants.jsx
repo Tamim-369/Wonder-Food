@@ -31,7 +31,7 @@ const AllRestaurants = ({ findPicture }) => {
           <div className="img w-5/12 md:w-2/12 p-4 flex-1">
             <img
               className="w-full rounded-full"
-              src={`${findPicture("profilePicture", user.profilePicture)}`}
+              src={`${user.profilePicture}`}
               alt=""
               srcset=""
             />
