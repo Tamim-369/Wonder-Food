@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 const router = express.Router();
 const __dirname = path.resolve();
 app.use(cors());
-
+app.use(express.static(path.join(__dirname, "/client/dist")));
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
