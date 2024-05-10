@@ -10,7 +10,7 @@
     "start": "node ./api/index.js",
     "build": "npm install && cd client && npm install && npm run build"
   },
-  "author": "",
+  "author": "Tamim Ahmed",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
